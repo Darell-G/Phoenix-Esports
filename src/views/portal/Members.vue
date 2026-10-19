@@ -261,7 +261,7 @@ async function save() {
           ><input v-model="form.public_visible" type="checkbox" />Allow this
           member to appear publicly</label
         ><button class="btn" :disabled="busy">
-          {{ busy ? "Saving…" : "Save member" }}
+          {{ busy ? "Saving…" : "Save" }}
         </button>
       </form></Modal
     >

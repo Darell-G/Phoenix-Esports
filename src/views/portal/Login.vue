@@ -133,7 +133,7 @@ async function submit() {
           ><button class="btn w-full" :disabled="busy">
             {{
               busy
-                ? "Please wait…"
+                ? "Signing in…"
                 : mode === "login"
                   ? "Sign in"
                   : "Send secure link"

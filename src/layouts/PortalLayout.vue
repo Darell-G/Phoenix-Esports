@@ -61,7 +61,7 @@ const links = computed(() =>
     },
     {
       to: "/portal/content",
-      label: "Content & merch",
+      label: "Content & Merch",
       icon: FileText,
       visible: can("content"),
     },
@@ -73,7 +73,7 @@ const links = computed(() =>
     },
     {
       to: "/portal/settings",
-      label: "Settings & access",
+      label: "Settings",
       icon: Settings,
       visible: !!portalAccount.value?.is_admin,
     },

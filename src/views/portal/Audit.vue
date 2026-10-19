@@ -78,7 +78,7 @@ onMounted(async () => {
             <th class="p-4">Time · PHT</th>
             <th class="p-4">Action</th>
             <th class="p-4">Record</th>
-            <th class="p-4">Officers and committees member</th>
+            <th class="p-4">In Charge</th>
             <th class="p-4">Activity</th>
           </tr>
         </thead>

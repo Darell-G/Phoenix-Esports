@@ -14,7 +14,7 @@ export const router = createRouter({
         {
           path: "",
           component: () => import("../views/Home.vue"),
-          meta: { title: "Rise" },
+          meta: { title: "Home" },
         },
         ...(
           [
@@ -33,7 +33,7 @@ export const router = createRouter({
         {
           path: ":section(announcements|events|recruitment|tournaments|merch)/:slug",
           component: () => import("../views/Detail.vue"),
-          meta: { title: "Explore Phoenix" },
+          meta: { title: "Explore" },
         },
       ],
     },
@@ -86,7 +86,7 @@ export const router = createRouter({
         {
           path: "settings",
           component: () => import("../views/portal/Settings.vue"),
-          meta: { title: "Settings & access", admin: true },
+          meta: { title: "Settings", admin: true },
         },
         {
           path: "audit",
