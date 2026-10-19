@@ -16,7 +16,7 @@ const config: Record<
   },
   events: {
     kind: "event",
-    title: "On the calendar",
+    title: "Calendar",
     description:
       "Campus moments, community gatherings, and what comes next. All times are Philippine time.",
   },
@@ -71,21 +71,27 @@ const paginated = computed(() =>
 </script>
 <template>
   <div class="page-wrap min-h-[65vh] pb-12 pt-8 sm:pb-20 sm:pt-10">
-    <h1 class="text-3xl leading-tight tracking-[-.05em] sm:text-6xl">
-      {{ current.title }}
-    </h1>
-    <p
-      class="mt-4 max-w-2xl text-sm leading-7 text-foreground/60 sm:mt-5 sm:text-base"
-    >
-      {{ current.description }}
-    </p>
     <div
-      v-if="section === 'events'"
-      class="my-9 flex flex-col items-start gap-4 sm:flex-row"
+      class="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between sm:gap-8"
     >
+      <div class="min-w-0">
+        <h1 class="text-3xl leading-tight tracking-[-.05em] sm:text-6xl">
+          {{ current.title }}
+        </h1>
+        <p
+          class="mt-4 max-w-2xl text-sm leading-7 text-foreground/60 sm:mt-5 sm:text-base"
+        >
+          {{ current.description }}
+        </p>
+      </div>
       <label
+        v-if="section === 'events'"
+        class="shrink-0 self-end sm:mt-2 sm:self-start"
         ><span class="sr-only">Event dates</span
-        ><select v-model="timing" class="field !mt-0">
+        ><select
+          v-model="timing"
+          class="field !mt-0 min-h-11 py-2 text-base sm:!text-xs"
+        >
           <option value="upcoming">Upcoming events</option>
           <option value="past">Past events</option>
           <option value="all">All events</option>
@@ -93,7 +99,7 @@ const paginated = computed(() =>
       >
     </div>
     <LoadState
-      :class="{ 'mt-9': section !== 'events' }"
+      class="mt-9"
       :loading="loading"
       :error="error"
       :empty="!filtered.length"
@@ -108,8 +114,7 @@ const paginated = computed(() =>
     />
     <div
       v-if="!loading && !error"
-      class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
-      :class="{ 'mt-9': section !== 'events' }"
+      class="mt-9 grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
     >
       <ContentCard v-for="item in paginated" :key="item.id" :item="item" />
     </div>

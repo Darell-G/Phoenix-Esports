@@ -15,6 +15,7 @@
 }
 
 @theme {
+  --container-8xl: 96rem;
   --color-ink: #141414;
   --color-foreground: #141414;
   --color-dialog: #ffffff;
@@ -113,6 +114,18 @@
 }
 
 /* Theme variables stay inside portal roots, including their native dialogs. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .public-site figure {
+    overflow: hidden;
+  }
+  .public-site figure img {
+    transition: transform 550ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .public-site figure:hover img {
+    transform: scale(1.015);
+  }
+}
+
 .portal-theme {
   color-scheme: light;
   --color-foreground: var(--color-ink);

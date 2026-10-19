@@ -139,7 +139,7 @@ async function logout() {
           <span class="text-sm font-bold"
             >PHOENIX<span
               class="mt-1 block text-[8px] font-normal tracking-widest text-foreground/50"
-              >OFFICERS & COMMITTEES</span
+              >ORGANIZATION PORTAL</span
             ></span
           >
         </RouterLink>

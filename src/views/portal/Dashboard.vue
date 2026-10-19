@@ -91,7 +91,7 @@ onMounted(load);
 </script>
 <template>
   <div>
-    <p class="eyebrow">Organization overview</p>
+    <p class="eyebrow">Overview</p>
     <h1 class="mt-3 text-2xl sm:text-3xl tracking-tight">
       Welcome, {{ portalAccount?.name || "Phoenix officers and committees" }}
     </h1>

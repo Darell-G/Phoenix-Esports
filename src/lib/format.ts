@@ -13,6 +13,8 @@ export const peso = (value: number) =>
     maximumFractionDigits: 0,
   }).format(value);
 export const human = (value: string) => value.replace(/_/g, " ");
+export const titleCase = (value: string) =>
+  human(value).replace(/\b\w/g, (letter) => letter.toUpperCase());
 export const studentEmail = (value: string) =>
   /^[^\s@]+@student\.fatima\.edu\.ph$/i.test(value.trim());
 export const errorMessage = (error: unknown) =>

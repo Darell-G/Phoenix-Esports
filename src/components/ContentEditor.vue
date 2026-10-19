@@ -5,7 +5,7 @@ import Modal from "./Modal.vue";
 import { requireClient } from "../lib/client";
 import { currentUser } from "../composables/useAuth";
 import type { Content, ContentKind } from "../lib/types";
-import { errorMessage, toLocal, fromLocal } from "../lib/format";
+import { errorMessage, toLocal, fromLocal, titleCase } from "../lib/format";
 const props = defineProps<{
   item?: Content;
   kinds: ContentKind[];
@@ -157,13 +157,13 @@ async function remove() {
             @change="form.status = 'draft'"
           >
             <option v-for="kind in availableKinds" :key="kind" :value="kind">
-              {{ kind }}
+              {{ titleCase(kind) }}
             </option>
           </select></label
         ><label class="label"
           >Status<select v-model="form.status" class="field">
-            <option v-for="status in statuses" :key="status">
-              {{ status }}
+            <option v-for="status in statuses" :key="status" :value="status">
+              {{ titleCase(status) }}
             </option>
           </select></label
         >

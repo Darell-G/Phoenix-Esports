@@ -4,7 +4,7 @@ import PortalPagination from "../../components/PortalPagination.vue";
 import { computed, onMounted, ref } from "vue";
 import { useRecords } from "../../composables/useRecords";
 import { invoke } from "../../lib/client";
-import { date, human, errorMessage } from "../../lib/format";
+import { date, human, errorMessage, titleCase } from "../../lib/format";
 import type { Application } from "../../lib/types";
 import Modal from "../../components/Modal.vue";
 import LoadState from "../../components/LoadState.vue";
@@ -186,7 +186,7 @@ async function save(convert = false) {
         <label class="label"
           >Status<select v-model="selected.status" class="field">
             <option v-for="status in statuses" :key="status" :value="status">
-              {{ human(status) }}
+              {{ titleCase(status) }}
             </option>
           </select></label
         ><label class="flex gap-3 text-sm"

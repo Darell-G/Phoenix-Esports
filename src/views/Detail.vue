@@ -175,9 +175,7 @@ const applicationUrl = computed(() => openingApplicationUrl(item.value));
             <section aria-labelledby="tournament-matches-title">
               <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
                 <h2 id="tournament-matches-title" class="text-xl">Matches</h2>
-                <p class="text-xs text-foreground/50">
-                  Philippine time / Scroll for more
-                </p>
+                <p class="text-xs text-foreground/50">Scroll for more</p>
               </div>
               <TournamentMatches :fixtures="fixtures" :teams="teams" />
             </section>
@@ -227,17 +225,23 @@ const applicationUrl = computed(() => openingApplicationUrl(item.value));
             ><template v-else
               ><div>
                 <p class="eyebrow">
-                  {{ item.starts_at ? "Date · Philippine time" : "Published" }}
+                  {{
+                    item.starts_at
+                      ? item.kind === "tournament"
+                        ? "Date"
+                        : "Date · Philippine time"
+                      : "Published"
+                  }}
                 </p>
-                <p class="mt-2">
+                <p :class="item.kind === 'tournament' ? 'mt-1' : 'mt-2'">
                   {{
                     date(item.starts_at || item.created_at, !!item.starts_at)
                   }}
                 </p>
               </div>
               <div v-if="item.kind === 'tournament' && item.ends_at">
-                <p class="eyebrow">End date / Philippine time</p>
-                <p class="mt-2">{{ date(item.ends_at, true) }}</p>
+                <p class="eyebrow">End date</p>
+                <p class="mt-1">{{ date(item.ends_at, true) }}</p>
               </div>
               <div v-if="item.kind === 'opening' && item.deadline">
                 <p class="eyebrow">Submission deadline</p>
@@ -245,11 +249,15 @@ const applicationUrl = computed(() => openingApplicationUrl(item.value));
               </div>
               <div v-if="item.venue">
                 <p class="eyebrow">Venue</p>
-                <p class="mt-2">{{ item.venue }}</p>
+                <p :class="item.kind === 'tournament' ? 'mt-1' : 'mt-2'">
+                  {{ item.venue }}
+                </p>
               </div>
               <div v-if="item.game">
                 <p class="eyebrow">Game</p>
-                <p class="mt-2">{{ item.game }}</p>
+                <p :class="item.kind === 'tournament' ? 'mt-1' : 'mt-2'">
+                  {{ item.game }}
+                </p>
               </div>
               <p
                 v-if="item.kind === 'opening'"

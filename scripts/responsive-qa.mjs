@@ -75,6 +75,12 @@ try {
     return result.result.value;
   };
   await send("Page.enable");
+  if (process.argv.includes("--motion")) {
+    await send("Page.addScriptToEvaluateOnNewDocument", {
+      source: `window.motionCalls = 0; const nativeAnimate = Element.prototype.animate;
+        Element.prototype.animate = function(...args) { window.motionCalls++; return nativeAnimate.apply(this, args); };`,
+    });
+  }
   const results = [];
   const routes = [
     "/",
@@ -336,6 +342,26 @@ try {
   await screenshot("sidebar-320");
   await navigate("/tournaments/tournament-0", 390, "&empty=1");
   await check("empty tournament", 390);
+  if (process.argv.includes("--motion")) {
+    await navigate("/", 1440);
+    await pause(700);
+    assert(await evaluate("window.motionCalls > 0"), "Public entrance animations run");
+    assert.equal(await evaluate("getComputedStyle(document.documentElement).scrollBehavior"), "smooth");
+    await send("Emulation.setEmulatedMedia", {
+      features: [{ name: "prefers-reduced-motion", value: "reduce" }],
+    });
+    await navigate("/", 390);
+    await pause(700);
+    assert.equal(await evaluate("window.motionCalls"), 0, "Reduced motion prevents entrance animations");
+    assert.equal(await evaluate("getComputedStyle(document.documentElement).scrollBehavior"), "auto");
+    await send("Emulation.setEmulatedMedia", {
+      features: [{ name: "prefers-reduced-motion", value: "no-preference" }],
+    });
+    await navigate("/portal/members", 1440);
+    assert.equal(await evaluate("window.motionCalls"), 0, "Portal excluded from public animation");
+    assert.equal(await evaluate("document.querySelector('.public-site')"), null);
+    console.log("PASS public motion, smooth scrolling, reduced motion, and portal exclusion");
+  }
   await writeFile(
     path.join(
       output,
