@@ -1,0 +1,199 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@font-face {
+  font-family: ClarityCity;
+  src: url(../assets/fonts/ClarityCity-Regular.ttf) format("truetype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Inter;
+  src: url(../assets/fonts/Inter_18pt-Regular.ttf) format("truetype");
+  font-display: swap;
+}
+
+@theme {
+  --color-ink: #141414;
+  --color-foreground: #141414;
+  --color-dialog: #ffffff;
+  --color-phoenix: #011300;
+  --color-teal: #7bb9b6;
+  --color-paper: #f7f8f4;
+  --color-line: #d9ded6;
+  --color-surface: #ffffff;
+  --color-canvas: #f3f5f1;
+  --font-clarity: ClarityCity, sans-serif;
+  --font-inter: Inter, sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    margin: 0;
+    background: #f7f8f4;
+    color: #141414;
+    font-family: Inter, sans-serif;
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+  h1,
+  h2,
+  h3,
+  p,
+  dt,
+  dd,
+  a {
+    overflow-wrap: anywhere;
+  }
+  img,
+  video {
+    max-width: 100%;
+  }
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:not(:disabled),
+  select {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+  :focus-visible {
+    outline: 2px solid #24736e;
+    outline-offset: 5px;
+  }
+  ::selection {
+    background: #7bb9b6;
+    color: #011300;
+  }
+}
+@layer components {
+  .page-wrap {
+    @apply mx-auto w-full min-w-0 max-w-[1500px] px-4 sm:px-8 lg:px-12;
+  }
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.22em] text-phoenix/65 dark:text-teal/75;
+  }
+  .btn {
+    @apply inline-flex min-h-12 max-w-full items-center justify-center gap-3 border border-phoenix bg-phoenix px-4 py-3 text-center text-sm text-white transition-colors hover:border-ink hover:bg-ink disabled:pointer-events-none sm:gap-6 sm:px-6 dark:border-teal dark:bg-teal dark:text-phoenix dark:hover:border-teal/85 dark:hover:bg-teal/85;
+  }
+  .btn-outline {
+    @apply inline-flex min-h-12 max-w-full items-center justify-center gap-3 border border-phoenix/35 px-4 py-3 text-center text-sm text-phoenix transition-colors hover:bg-phoenix/5 sm:gap-6 sm:px-6 dark:border-teal/40 dark:text-teal dark:hover:bg-teal/10;
+  }
+  .field {
+    @apply mt-2 min-h-12 w-full min-w-0 max-w-full rounded-none border border-line bg-surface px-3 py-3 text-base outline-offset-2 placeholder:text-foreground/35 sm:text-sm;
+  }
+  select.field {
+    @apply appearance-none pr-11;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23141414' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1rem;
+  }
+  .label {
+    @apply block min-w-0 text-sm text-foreground/80;
+  }
+  .panel {
+    @apply min-w-0 border border-line bg-surface p-4 sm:p-7;
+  }
+}
+
+/* Theme variables stay inside portal roots, including their native dialogs. */
+.portal-theme {
+  color-scheme: light;
+  --color-foreground: var(--color-ink);
+  --color-surface: #ffffff;
+  --color-canvas: #ffffff;
+  --color-paper: #ffffff;
+  --color-dialog: #ffffff;
+  --color-line: color-mix(in srgb, var(--color-ink) 20%, transparent);
+  --color-phoenix: var(--color-ink);
+  --color-teal: var(--color-ink);
+}
+.portal-theme.dark {
+  color-scheme: dark;
+  --color-foreground: #ffffff;
+  --color-surface: var(--color-ink);
+  --color-canvas: var(--color-ink);
+  --color-paper: var(--color-ink);
+  --color-dialog: var(--color-ink);
+  --color-line: color-mix(in srgb, #ffffff 25%, transparent);
+  --color-teal: #ffffff;
+}
+.portal-theme :focus-visible {
+  outline-color: var(--color-foreground);
+}
+.portal-theme.dark select.field {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+@media (forced-colors: active) {
+  select.field,
+  .portal-theme.dark select.field {
+    appearance: auto;
+    background-image: none;
+  }
+}
+.portal-theme .btn {
+  border-color: var(--color-foreground);
+  background: var(--color-foreground);
+  color: var(--color-surface);
+}
+.portal-theme .btn:hover {
+  background: var(--color-surface);
+  color: var(--color-foreground);
+}
+.portal-theme .btn-outline {
+  border-color: var(--color-foreground);
+  color: var(--color-foreground);
+}
+.portal-theme .btn-outline:hover {
+  background: var(--color-foreground);
+  color: var(--color-surface);
+}
+.portal-theme ::selection {
+  background: var(--color-foreground);
+  color: var(--color-surface);
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #828282;
+}
+.dark ::-webkit-scrollbar-track {
+  background: #141414;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #8a8a8a;
+}

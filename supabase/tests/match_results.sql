@@ -1,0 +1,40 @@
+-- Winner corrections, cancellations, repeat saves and deletion are atomic and reversible.
+begin;
+do $$
+declare actor uuid=gen_random_uuid(); outsider uuid=gen_random_uuid(); t uuid; a uuid; b uuid; c uuid; first_match uuid; second_match uuid;
+begin
+  insert into public.officer_committee_invitations(email,name,modules) values('result-test@student.fatima.edu.ph','Result test',array['tournaments']);
+  insert into auth.users(id,email) values(actor,'result-test@student.fatima.edu.ph');
+  insert into public.officer_committee_invitations(email,name,modules) values('result-outsider@student.fatima.edu.ph','Result outsider',array['content']);
+  insert into auth.users(id,email) values(outsider,'result-outsider@student.fatima.edu.ph');
+  insert into public.content(kind,slug,title,status) values('tournament','automatic-results-test','Result tournament','published') returning id into t;
+  perform set_config('request.jwt.claim.sub',actor::text,true); execute 'set local role authenticated';
+  insert into public.tournament_scoreboard(tournament_id,team_name) values(t,'Alpha') returning id into a;
+  insert into public.tournament_scoreboard(tournament_id,team_name) values(t,'Beta') returning id into b;
+  insert into public.tournament_scoreboard(tournament_id,team_name) values(t,'Gamma') returning id into c;
+  begin update public.tournament_scoreboard set wins=99 where id=a; raise exception 'FAIL direct wins update'; exception when insufficient_privilege then null; end;
+  begin insert into public.tournament_scoreboard(tournament_id,team_name,wins) values(t,'Counter bypass',99); raise exception 'FAIL direct wins insert'; exception when insufficient_privilege then null; end;
+  insert into public.tournament_fixtures(tournament_id,team_a_id,team_b_id,status,winner_id) values(t,a,b,'completed',a) returning id into first_match;
+  if not exists(select 1 from public.tournament_scoreboard where id=a and wins=1 and losses=0) or not exists(select 1 from public.tournament_scoreboard where id=b and wins=0 and losses=1) then raise exception 'FAIL first result'; end if;
+  update public.tournament_fixtures set round_label='Saved again',version=2 where id=first_match and version=1;
+  if not exists(select 1 from public.tournament_scoreboard where id=a and wins=1) then raise exception 'FAIL duplicate counted'; end if;
+  update public.tournament_fixtures set winner_id=b,version=3 where id=first_match and version=2;
+  if not exists(select 1 from public.tournament_scoreboard where id=a and wins=0 and losses=1) or not exists(select 1 from public.tournament_scoreboard where id=b and wins=1 and losses=0) then raise exception 'FAIL correction reversal'; end if;
+  begin update public.tournament_fixtures set winner_id=a,version=3 where id=first_match; raise exception 'FAIL stale result accepted'; exception when others then if sqlerrm like 'FAIL:%' then raise; end if; end;
+  begin update public.tournament_fixtures set winner_id=c,version=4 where id=first_match; raise exception 'FAIL winner outside match'; exception when check_violation then null; end;
+  begin update public.tournament_fixtures set winner_id=null,version=4 where id=first_match; raise exception 'FAIL completed result missing winner'; exception when check_violation then null; end;
+  insert into public.tournament_fixtures(tournament_id,team_a_id,team_b_id,status,winner_id) values(t,a,c,'completed',a) returning id into second_match;
+  if not exists(select 1 from public.tournament_scoreboard where id=a and wins=1 and losses=1) then raise exception 'FAIL multiple match totals'; end if;
+  update public.tournament_fixtures set status='cancelled',winner_id=null,version=4 where id=first_match and version=3;
+  if not exists(select 1 from public.tournament_scoreboard where id=a and wins=1 and losses=0) or not exists(select 1 from public.tournament_scoreboard where id=b and wins=0 and losses=0) then raise exception 'FAIL cancelled result reversal'; end if;
+  delete from public.tournament_fixtures where id=second_match and version=1;
+  if exists(select 1 from public.tournament_scoreboard where tournament_id=t and (wins<>0 or losses<>0)) then raise exception 'FAIL deleted result reversal'; end if;
+  update public.tournament_fixtures set status='completed',winner_id=a,version=5 where id=first_match and version=4;
+  execute 'reset role';
+  if not exists(select 1 from public.audit_log where actor_id=actor and record_id=a::text and reason like 'Updated scoreboard team:%wins%') then raise exception 'FAIL result aggregate audit'; end if;
+  perform set_config('request.jwt.claim.sub',outsider::text,true); execute 'set local role authenticated';
+  update public.tournament_fixtures set winner_id=b,version=6 where id=first_match;
+  if not exists(select 1 from public.tournament_scoreboard where id=a and wins=1) then raise exception 'FAIL unauthorized result changed totals'; end if;
+  execute 'reset role';
+end $$;
+rollback;

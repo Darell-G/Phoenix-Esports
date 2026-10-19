@@ -1,0 +1,45 @@
+-- End-date, match schedule and RLS regression; every fixture rolls back.
+begin;
+do $$
+declare actor uuid=gen_random_uuid(); outsider uuid=gen_random_uuid(); t uuid; other uuid; a uuid; b uuid; c uuid; d uuid; fixture uuid; draft_fixture uuid; start_time timestamptz=now()+interval '1 day'; finish_time timestamptz=now()+interval '3 days';
+begin
+  insert into public.officer_committee_invitations(email,name,modules) values('fixture-test@student.fatima.edu.ph','Fixture test',array['tournaments']);
+  insert into auth.users(id,email) values(actor,'fixture-test@student.fatima.edu.ph');
+  insert into public.officer_committee_invitations(email,name,modules) values('fixture-outsider@student.fatima.edu.ph','Fixture outsider',array['content']);
+  insert into auth.users(id,email) values(outsider,'fixture-outsider@student.fatima.edu.ph');
+  insert into public.content(kind,slug,title,status,starts_at,ends_at) values('tournament','fixture-public','Fixture tournament','published',start_time,finish_time) returning id into t;
+  insert into public.content(kind,slug,title,status) values('tournament','fixture-private','Private tournament','draft') returning id into other;
+  perform set_config('request.jwt.claim.sub',actor::text,true); execute 'set local role authenticated';
+  perform public.save_content(t,jsonb_build_object('ends_at',finish_time+interval '1 day'),'');
+  if not exists(select 1 from public.content where id=t and ends_at=finish_time+interval '1 day') then raise exception 'FAIL end date not saved through content RPC'; end if;
+  begin perform public.save_content(t,jsonb_build_object('ends_at',start_time-interval '1 hour'),''); raise exception 'FAIL invalid end before start'; exception when check_violation then null; end;
+  insert into public.tournament_scoreboard(tournament_id,team_name) values(t,'Alpha') returning id into a;
+  insert into public.tournament_scoreboard(tournament_id,team_name) values(t,'Beta') returning id into b;
+  insert into public.tournament_scoreboard(tournament_id,team_name) values(other,'Gamma') returning id into c;
+  insert into public.tournament_scoreboard(tournament_id,team_name) values(other,'Delta') returning id into d;
+  insert into public.tournament_fixtures(tournament_id,team_a_id,team_b_id,starts_at,round_label) values(t,a,b,start_time+interval '2 hours','Semifinal') returning id into fixture;
+  insert into public.tournament_fixtures(tournament_id,team_a_id,team_b_id) values(other,c,d) returning id into draft_fixture;
+  begin insert into public.tournament_fixtures(tournament_id,team_a_id,team_b_id) values(t,a,a); raise exception 'FAIL same team twice'; exception when check_violation then null; end;
+  begin insert into public.tournament_fixtures(tournament_id,team_a_id,team_b_id) values(t,a,c); raise exception 'FAIL cross tournament team'; exception when others then if sqlerrm like 'FAIL:%' then raise; end if; end;
+  begin insert into public.tournament_fixtures(tournament_id,team_a_id,team_b_id,starts_at) values(t,a,b,start_time-interval '1 hour'); raise exception 'FAIL schedule before start'; exception when others then if sqlerrm like 'FAIL:%' then raise; end if; end;
+  begin insert into public.tournament_fixtures(tournament_id,team_a_id,team_b_id,starts_at) values(t,a,b,finish_time+interval '2 days'); raise exception 'FAIL schedule after end'; exception when others then if sqlerrm like 'FAIL:%' then raise; end if; end;
+  update public.tournament_fixtures set status='live',version=2 where id=fixture and version=1;
+  begin update public.tournament_fixtures set status='completed',version=2 where id=fixture; raise exception 'FAIL stale fixture update'; exception when others then if sqlerrm like 'FAIL:%' then raise; end if; end;
+  begin update public.content set ends_at=start_time+interval '1 hour' where id=t; raise exception 'FAIL tournament bounds exclude fixture'; exception when others then if sqlerrm like 'FAIL:%' then raise; end if; end;
+  begin delete from public.tournament_scoreboard where id=a; raise exception 'FAIL referenced team deleted'; exception when foreign_key_violation then null; end;
+  execute 'reset role';
+  if not exists(select 1 from public.audit_log where record_id=fixture::text and actor_id=actor and reason like 'Created match schedule: Alpha vs Beta%') then raise exception 'FAIL automatic fixture audit'; end if;
+  execute 'set local role anon';
+  if not exists(select 1 from public.tournament_fixtures where id=fixture) then raise exception 'FAIL published fixture unavailable'; end if;
+  if exists(select 1 from public.tournament_fixtures where id=draft_fixture) then raise exception 'FAIL draft fixture public'; end if;
+  begin insert into public.tournament_fixtures(tournament_id,team_a_id,team_b_id) values(t,a,b); raise exception 'FAIL anonymous match write'; exception when insufficient_privilege then null; end;
+  execute 'reset role'; perform set_config('request.jwt.claim.sub',outsider::text,true); execute 'set local role authenticated';
+  begin insert into public.tournament_fixtures(tournament_id,team_a_id,team_b_id) values(t,a,b); raise exception 'FAIL module bypass'; exception when others then if sqlstate<>'42501' and sqlerrm<>'Select a valid tournament' then raise; end if; end;
+  update public.tournament_fixtures set status='cancelled',version=3 where id=fixture;
+  if exists(select 1 from public.tournament_fixtures where id=fixture and status='cancelled') then raise exception 'FAIL unauthorized match edit'; end if;
+  execute 'reset role'; perform set_config('request.jwt.claim.sub',actor::text,true); execute 'set local role authenticated';
+  delete from public.tournament_fixtures where id=fixture and version=2;
+  execute 'reset role';
+  if not exists(select 1 from public.audit_log where record_id=fixture::text and actor_id=actor and action='delete') then raise exception 'FAIL fixture delete audit'; end if;
+end $$;
+rollback;
